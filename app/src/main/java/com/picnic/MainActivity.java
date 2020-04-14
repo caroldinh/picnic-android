@@ -227,35 +227,19 @@ public class MainActivity extends AppCompatActivity  {
                 }
                 final ArrayList<Picnic> data = new ArrayList<>();
 
-                //Picnic p = new Picnic("Test Picnic", "Test Description", uid);
-                //data.add(p);
-
-                // TODO: FIX THIS TO GET ACTUAL INDEXES (child("" + i)) & PRESERVE ARTWORKS AND CRITIQUES WITHIN ARTWORKS
-
                 for(int i = 0; i < picnicIds.size(); i++){
                     Log.d(TAG, picnicIds.get(i));
                     mDatabase.child("picnics").child(picnicIds.get(i)).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            String[] children = new String[5];
-                            int i = 0;
-                            for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                                Log.d(TAG, messageSnapshot.getValue().toString());
-                                children[i] = messageSnapshot.getValue().toString();
-                                i++;
-                            }
-                            String name = children[4];
-                            String description = children[0];
-                            String uid = children[1];
-                            String id = children[2];
-                            Picnic p = new Picnic(name, description, uid, id);
-                            Log.d(TAG, "UID = " + p.hostUID);
-                            data.add(p);
 
-                            Log.d(TAG, "Data: "+data.size());
-                            for(Picnic pic:data){
-                                Log.d(TAG, pic.hostUID);
-                            }
+                            String name = dataSnapshot.child("name").getValue().toString();
+                            String description = dataSnapshot.child("description").getValue().toString();
+                            String uid = dataSnapshot.child("hostUID").getValue().toString();
+                            String id = dataSnapshot.child("id").getValue().toString();
+
+                            Picnic p = new Picnic(name, description, uid, id);
+                            data.add(p);
 
                             PicnicAdapter adapter = new PicnicAdapter(getApplicationContext(), data);
                             picnicGallery.setAdapter(adapter);

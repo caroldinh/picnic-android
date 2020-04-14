@@ -29,24 +29,9 @@ public class Artwork {
 
     }
 
-    public Artwork(String title, String artist, String imageURL, String description, String feedback, String timestamp){
+    public void addCritique(Critique c){
 
-        this.title = title;
-        this.artist = artist;
-        this.imageURL = imageURL;
-        this.description = description;
-        this.feedback = feedback;
-        this.timestamp = timestamp;
-        critiques = new ArrayList<>();
-
-    }
-
-    public void addCritiques(List<Critique> critiques){
-
-        for(Critique c:critiques){
-            this.critiques.add(c);
-        }
-
+        critiques.add(c);
     }
 
 }

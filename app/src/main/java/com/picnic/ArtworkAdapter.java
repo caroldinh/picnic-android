@@ -1,9 +1,11 @@
 package com.picnic;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,8 +25,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.picnic.data.Artwork;
 import com.picnic.data.Picnic;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.List;
 
 public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHolder> {
@@ -67,6 +73,14 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
             holder.name.setText(name);
             holder.description.setText(description);
 
+            try {
+                Bitmap image = new getImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data.get(position).imageURL).get();
+                holder.artwork.setImageBitmap(image);
+            } catch(Exception e){
+
+            }
+
+            /***
             if (position % 3 == 0) {
                 holder.card.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardcolororange));
             } else if (position % 3 == 1) {
@@ -74,14 +88,8 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
             } else {
                 holder.card.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardcolorblue));
             }
+             ***/
 
-            try {
-                URL url = new URL(data.get(position).imageURL);
-                Bitmap image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                holder.artwork.setImageBitmap(image);
-            } catch(IOException e) {
-                //System.out.println(e);
-            }
 
             final int p = position;
 
@@ -170,4 +178,22 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
         void onItemLongClicked(View view, int position);
     }
 
+
+    public class getImage extends AsyncTask<String , Integer, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(String... urls) {
+
+            try {
+                URL url = new URL(urls[0]);
+                Bitmap image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                return image;
+            } catch(IOException e) {
+                //System.out.println(e);
+            }
+
+            return null;
+
+        }
+    }
 }

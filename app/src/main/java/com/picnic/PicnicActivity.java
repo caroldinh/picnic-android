@@ -9,13 +9,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,9 +32,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.picnic.data.Artwork;
 import com.picnic.data.Picnic;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class PicnicActivity extends AppCompatActivity  {
 
@@ -49,6 +54,8 @@ public class PicnicActivity extends AppCompatActivity  {
 
     NavDrawerItem[] navRows;
 
+    LinearLayout header;
+
     RecyclerView artGallery;
     String TAG = "PicnicActivity Debugging Tag";
 
@@ -57,6 +64,10 @@ public class PicnicActivity extends AppCompatActivity  {
     TextView picnicName;
     TextView picnicDescription;
     TextView picnicCode;
+
+    ProgressBar prog;
+
+    boolean done = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +78,11 @@ public class PicnicActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_picnicpage);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        prog = findViewById(R.id.progressBar);
+        prog.setVisibility(View.VISIBLE);
+
+        header = findViewById(R.id.header);
 
         picnicName = findViewById(R.id.name);
         picnicDescription = findViewById(R.id.description);
@@ -135,7 +151,6 @@ public class PicnicActivity extends AppCompatActivity  {
                 @Override
                 public void onClick(View view) {
 
-                    // TODO: Add "Upload Artwork" page
                     Intent intent = new Intent(PicnicActivity.this, UploadArtwork.class);
                     intent.putExtra("PicnicID", picnicID);
                     startActivity(intent);
@@ -149,6 +164,7 @@ public class PicnicActivity extends AppCompatActivity  {
     @Override
     public void onStart() {
         super.onStart();
+
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser user = mAuth.getCurrentUser();
         // updateUI(currentUser);
@@ -192,12 +208,27 @@ public class PicnicActivity extends AppCompatActivity  {
 
         // TODO: Add art gallery adapter
 
-
-        final ArrayList<String> picnicIds = new ArrayList<>();
-
-        mDatabase.child("picnics").child(picnicID).addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.child("picnics").child(picnicID).child("artworks").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
+                ArrayList<Artwork> artworks = new ArrayList<>();
+                for(int i = 0; i < dataSnapshot.getChildrenCount(); i++){
+                    String imageURL = dataSnapshot.child("" + i).child("imageURL").getValue().toString();
+                    String title = dataSnapshot.child("" + i).child("title").getValue().toString();
+                    String description = dataSnapshot.child("" + i).child("description").getValue().toString();
+                    String artist = dataSnapshot.child("" + i).child("artist").getValue().toString();
+                    String feedback = dataSnapshot.child("" + i).child("feedback").getValue().toString();
+
+                    Artwork a = new Artwork(title, artist, imageURL, description, feedback);
+                    artworks.add(a);
+                }
+
+                ArtworkAdapter adapter = new ArtworkAdapter(getApplicationContext(), artworks);
+                artGallery.setAdapter(adapter);
+                done = true;
+                prog.setVisibility(View.GONE);
+                header.setVisibility(View.VISIBLE);
 
             }
 
@@ -205,7 +236,6 @@ public class PicnicActivity extends AppCompatActivity  {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-
 
     }
 

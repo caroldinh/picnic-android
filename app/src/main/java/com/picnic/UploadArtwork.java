@@ -122,7 +122,7 @@ public class UploadArtwork extends AppCompatActivity {
 
             // Get the data from an ImageView as bytes
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            image.compress(Bitmap.CompressFormat.JPEG, 50, baos);
             byte[] data = baos.toByteArray();
 
             UploadTask uploadTask = ref.putBytes(data);
@@ -145,30 +145,9 @@ public class UploadArtwork extends AppCompatActivity {
                         mDatabase.child("picnics").child(picnicID).child("artworks").addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                ArrayList artworks = new ArrayList<Artwork>();
-                                for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
-
-                                    String title = dataSnapshot.child("" + i).child("title").getValue().toString();
-                                    String artist = dataSnapshot.child("" + i).child("artist").getValue().toString();
-                                    String description = dataSnapshot.child("" + i).child("description").getValue().toString();
-                                    String imageURL = dataSnapshot.child("" + i).child("imageURL").getValue().toString();
-                                    String feedback = dataSnapshot.child("" + i).child("feedback").getValue().toString();
-                                    String timestamp = dataSnapshot.child("" + i).child("timestamp").getValue().toString();
-
-                                    Artwork a = new Artwork(title, artist, imageURL, description, feedback, timestamp);
-
-                                    DataSnapshot critiques = dataSnapshot.child("" + i).child("critiques");
-
-                                    for(int j = 0; j < critiques.getChildrenCount(); j++){
-
-                                        // TODO: Add Critiques
-                                    }
-
-                                }
 
                                 Artwork art = new Artwork(name.getText().toString(), uid, url, description.getText().toString(), feedback.getText().toString());
-                                artworks.add(art);
-                                mDatabase.child("picnics").child(picnicID).child("artworks").setValue(art);
+                                mDatabase.child("picnics").child(picnicID).child("artworks").child(""+dataSnapshot.getChildrenCount()).setValue(art);
                                 finish();
                             }
 
