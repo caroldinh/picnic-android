@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "839175725494",
+    "firebase_url": "https://picnic-3a4eb.firebaseio.com",
+    "project_id": "picnic-3a4eb",
+    "storage_bucket": "picnic-3a4eb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839175725494:android:66887320fe6296021a6117",
+        "android_client_info": {
+          "package_name": "com.picnic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "839175725494-ciko94tntekj0kombilhsr69b2ioc8mr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.picnic",
+            "certificate_hash": "4ec687193e8d76f67a24cd94dfc9aa88e747f4b1"
+          }
+        },
+        {
+          "client_id": "839175725494-c07snfcima5s32heg9gf3t0l9ln7oqne.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArX7O95RnwKg0UGUUwMqC25oMXxhi0HCs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "839175725494-c07snfcima5s32heg9gf3t0l9ln7oqne.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
