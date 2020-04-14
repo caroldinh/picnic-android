@@ -64,33 +64,26 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                >
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="10dp"
+                android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis ..."
+                android:textSize="12dp"
+                android:layout_gravity="center_vertical" />
 
-                <TextView
-                    android:id="@+id/description"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="20dp"
-                    android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis ..."
-                    android:textSize="12dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="0.7"/>
+            <TextView
+                android:id="@+id/memnbersCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_gravity="bottom"
+                android:gravity="right"
+                android:text="3 members"
+                android:textColor="@color/colorPrimaryDark" />
 
-                <ImageView
-                    android:id="@+id/hosticon"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_marginRight="10dp"
-                    android:layout_gravity="center"
-                    android:tint="@color/colorPrimaryDark"
-                    app:srcCompat="@drawable/profile"
-                    android:layout_weight="0.3"/>
-
-            </LinearLayout>
 
         </LinearLayout>
 

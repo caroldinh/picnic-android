@@ -63,7 +63,6 @@ public class CreatePicnic extends AppCompatActivity {
 
     public void cancel(View v){
 
-        startActivity(new Intent(CreatePicnic.this, MainActivity.class));
         finish();
 
     }

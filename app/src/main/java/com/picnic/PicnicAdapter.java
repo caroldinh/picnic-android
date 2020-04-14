@@ -30,6 +30,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.picnic.data.Member;
 import com.picnic.data.Picnic;
 
 import java.util.ArrayList;
@@ -106,6 +107,24 @@ public class PicnicAdapter extends RecyclerView.Adapter<PicnicAdapter.ViewHolder
                 public void onCancelled(DatabaseError databaseError) {
                 }
             });
+
+            mDatabase.child("picnics").child(data.get(position).id).child("members").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    int count = (int)dataSnapshot.getChildrenCount();
+                    if(count == 1){
+                        holder.memberCount.setText("1 member");
+                    } else {
+                        holder.memberCount.setText(count + " members");
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
         }
 
     }
@@ -122,7 +141,7 @@ public class PicnicAdapter extends RecyclerView.Adapter<PicnicAdapter.ViewHolder
         TextView name;
         TextView hostname;
         TextView description;
-        ImageView hostIcon;
+        TextView memberCount;
         ImageView icon;
         CardView card;
 
@@ -131,9 +150,8 @@ public class PicnicAdapter extends RecyclerView.Adapter<PicnicAdapter.ViewHolder
             name = itemView.findViewById(R.id.name);
             description = itemView.findViewById(R.id.description);
             hostname = itemView.findViewById(R.id.hostname);
-            hostIcon = itemView.findViewById(R.id.hosticon);
+            memberCount = itemView.findViewById(R.id.memnbersCount);
             icon = itemView.findViewById(R.id.icon);
-            hostIcon.setImageResource(R.drawable.profile);
             icon.setImageResource(R.drawable.picnics);
             itemView.setOnClickListener(this);
             card = itemView.findViewById(R.id.card);

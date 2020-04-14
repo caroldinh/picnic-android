@@ -134,7 +134,11 @@ public class PicnicActivity extends AppCompatActivity  {
         add.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+
                     // TODO: Add "Upload Artwork" page
+                    Intent intent = new Intent(PicnicActivity.this, UploadArtwork.class);
+                    intent.putExtra("PicnicID", picnicID);
+                    startActivity(intent);
                 }
         });
 
@@ -188,66 +192,19 @@ public class PicnicActivity extends AppCompatActivity  {
 
         // TODO: Add art gallery adapter
 
-        /***
 
         final ArrayList<String> picnicIds = new ArrayList<>();
 
-        mDatabase.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.child("picnics").child(picnicID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "" + dataSnapshot.child("Hosted").getChildrenCount());
-                for(int i = 0; i < dataSnapshot.child("Hosted").getChildrenCount(); i++) {
-                    picnicIds.add(((ArrayList) dataSnapshot.child("Hosted").getValue()).get(i).toString());
-                }
-                for(int i = 0; i < dataSnapshot.child("Joined").getChildrenCount(); i++) {
-                    picnicIds.add(((ArrayList) dataSnapshot.child("Joined").getValue()).get(i).toString());
-                }
-                final ArrayList<Picnic> data = new ArrayList<>();
 
-                //Picnic p = new Picnic("Test Picnic", "Test Description", uid);
-                //data.add(p);
-
-                for(int i = 0; i < picnicIds.size(); i++){
-                    Log.d(TAG, picnicIds.get(i));
-                    mDatabase.child("picnics").child(picnicIds.get(i)).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            String[] children = new String[3];
-                            int i = 0;
-                            for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                                Log.d(TAG, messageSnapshot.getValue().toString());
-                                children[i] = messageSnapshot.getValue().toString();
-                                i++;
-                            }
-                            String name = children[2];
-                            String description = children[0];
-                            String uid = children[1];
-                            Picnic p = new Picnic(name, description, uid);
-                            Log.d(TAG, "UID = " + p.hostUID);
-                            data.add(p);
-
-                            Log.d(TAG, "Data: "+data.size());
-                            for(Picnic pic:data){
-                                Log.d(TAG, pic.hostUID);
-                            }
-
-                            PicnicAdapter adapter = new PicnicAdapter(getApplicationContext(), data);
-                            picnicGallery.setAdapter(adapter);
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                        }
-                    });
-                }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-        ***/
 
 
     }

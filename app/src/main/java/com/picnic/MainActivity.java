@@ -17,6 +17,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.picnic.data.Member;
 import com.picnic.data.Picnic;
 
 import androidx.annotation.NonNull;
@@ -155,7 +156,6 @@ public class MainActivity extends AppCompatActivity  {
             public void onClick(View view) {
                 Toast.makeText(getApplicationContext(), "Host Picnic", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, CreatePicnic.class));
-                finish();
             }
         });
         join = (FloatingActionButton) findViewById(R.id.join);
@@ -230,19 +230,21 @@ public class MainActivity extends AppCompatActivity  {
                 //Picnic p = new Picnic("Test Picnic", "Test Description", uid);
                 //data.add(p);
 
+                // TODO: FIX THIS TO GET ACTUAL INDEXES (child("" + i)) & PRESERVE ARTWORKS AND CRITIQUES WITHIN ARTWORKS
+
                 for(int i = 0; i < picnicIds.size(); i++){
                     Log.d(TAG, picnicIds.get(i));
                     mDatabase.child("picnics").child(picnicIds.get(i)).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            String[] children = new String[4];
+                            String[] children = new String[5];
                             int i = 0;
                             for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
                                 Log.d(TAG, messageSnapshot.getValue().toString());
                                 children[i] = messageSnapshot.getValue().toString();
                                 i++;
                             }
-                            String name = children[3];
+                            String name = children[4];
                             String description = children[0];
                             String uid = children[1];
                             String id = children[2];
@@ -305,54 +307,62 @@ public class MainActivity extends AppCompatActivity  {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(code)) {
 
-                    mDatabase.child("users").child(uid).child("Joined").addListenerForSingleValueEvent(new ValueEventListener() {
+                    boolean joined = false;
+                    final ArrayList<Member> members = new ArrayList<>();
+                    for (int i = 0; i < dataSnapshot.child(code).child("members").getChildrenCount(); i++) {
+                        String mUID = dataSnapshot.child(code).child("members").child(""+i).child("UID").getValue().toString();
+                        Log.d(TAG, mUID);
 
-                        // Get a list of picnics already joined
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            final ArrayList joined = new ArrayList<String>();
-                            for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
-                                joined.add(((ArrayList) dataSnapshot.getValue()).get(i).toString());
+                        members.add(new Member(mUID));
+
+                        // [{UID=7bfHVaXLgHO16UfkZmzUWemrNax1, contributions=0, critiques=0}]
+
+                        if(mUID.equals(uid)){
+                            joined = true;
+                        }
+                    }
+
+                    if(!joined){
+
+                        members.add(new Member(uid));
+                        mDatabase.child("picnics").child(code).child("members").setValue(members);
+
+                        mDatabase.child("users").child(uid).child("Joined").addListenerForSingleValueEvent(new ValueEventListener() {
+
+                            // Get a list of picnics already joined
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                final ArrayList joined = new ArrayList<String>();
+                                for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
+                                    joined.add(((ArrayList) dataSnapshot.getValue()).get(i).toString());
+                                }
+
+                                // Add the newly joined picnic and push to database
+                                joined.add(code);
+                                mDatabase.child("users").child(uid).child("Joined").setValue(joined);
+
+                                // Refresh the page
+                                startActivity(new Intent(MainActivity.this, MainActivity.class));
+                                finish();
+
+
+
                             }
 
-                            if(joined.contains(code)){
-                                Toast.makeText(getApplicationContext(), "You've already joined this Picnic!", Toast.LENGTH_SHORT).show();
-
-                            } else {
-
-                                mDatabase.child("users").child(uid).child("Hosted").addListenerForSingleValueEvent(new ValueEventListener() {
-
-                                    // Get a list of picnics already hosted
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        final ArrayList hosted = new ArrayList<String>();
-                                        for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
-                                            hosted.add(((ArrayList) dataSnapshot.getValue()).get(i).toString());
-                                        }
-
-                                        if(hosted.contains(code)){
-                                            Toast.makeText(getApplicationContext(), "You've already joined this Picnic!", Toast.LENGTH_SHORT).show();
-
-                                        } else {
-                                            // Add the newly joined picnic and push to database
-                                            joined.add(code);
-                                            mDatabase.child("users").child(uid).child("Joined").setValue(joined);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-                                    }
-                                });
-
-
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
                             }
-                        }
+                        });
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                        }
-                    });
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "You've already joined this Picnic!", Toast.LENGTH_SHORT).show();
+                    }
+
+
+
+                } else{
+                    Toast.makeText(getApplicationContext(), "This Picnic does not exist", Toast.LENGTH_SHORT).show();
                 }
             }
 
