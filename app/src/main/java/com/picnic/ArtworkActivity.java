@@ -1,30 +1,28 @@
 package com.picnic;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -33,12 +31,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.picnic.data.Artwork;
-import com.picnic.data.Picnic;
+import com.picnic.data.Critique;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-public class PicnicActivity extends AppCompatActivity  {
+public class ArtworkActivity extends AppCompatActivity  {
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -56,16 +55,17 @@ public class PicnicActivity extends AppCompatActivity  {
 
     LinearLayout header;
 
-    RecyclerView artGallery;
+    RecyclerView critiques;
     String TAG = "PicnicActivity Debugging Tag";
 
     String picnicID;
+    String artID;
 
-    TextView picnicName;
-    TextView picnicDescription;
-    TextView picnicCode;
-
+    TextView title, artist, description, timestamp, feedback;
+    ImageView artwork;
     ProgressBar prog;
+
+    LinearLayout layout;
 
     boolean done = false;
 
@@ -74,32 +74,34 @@ public class PicnicActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
 
         picnicID = getIntent().getStringExtra("PicnicID");
+        artID = getIntent().getStringExtra("ArtID");
 
-        setContentView(R.layout.activity_picnicpage);
+        setContentView(R.layout.activity_artworkpage);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Loading...");
 
         prog = findViewById(R.id.progressBar);
         prog.setVisibility(View.VISIBLE);
 
         header = findViewById(R.id.header);
 
-        picnicName = findViewById(R.id.name);
-        picnicDescription = findViewById(R.id.description);
-        picnicCode = findViewById(R.id.code);
+        title = findViewById(R.id.title);
+        artist = findViewById(R.id.artist);
+        description = findViewById(R.id.description);
+        timestamp = findViewById(R.id.timestamp);
+        feedback = findViewById(R.id.feedback);
+
+        artwork = findViewById(R.id.imageView);
+        layout = findViewById(R.id.container_body);
+        layout.setVisibility(View.GONE);
 
         drawerLayout = findViewById(R.id.drawer);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Loading...");
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-
-        /***
-        navigationView = findViewById(R.id.navigationView);
-        navigationView.setNavigationItemSelectedListener(this);
-         ***/
 
         drawerList = findViewById(R.id.leftDrawer);
 
@@ -120,7 +122,7 @@ public class PicnicActivity extends AppCompatActivity  {
                 {
                     case 0:
                         //Toast.makeText(MainActivity.this, "My Picnics",Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(PicnicActivity.this, MainActivity.class));
+                        startActivity(new Intent(ArtworkActivity.this, MainActivity.class));
                         finish();
                         break;
                     case 1:
@@ -132,7 +134,7 @@ public class PicnicActivity extends AppCompatActivity  {
                     case 3:
                         //Toast.makeText(MainActivity.this, "Logout",Toast.LENGTH_SHORT).show();
                         mAuth.signOut();
-                        startActivity(new Intent(PicnicActivity.this, Register.class));
+                        startActivity(new Intent(ArtworkActivity.this, Register.class));
                         finish();
                         break;
                     default:
@@ -152,13 +154,15 @@ public class PicnicActivity extends AppCompatActivity  {
                 @Override
                 public void onClick(View view) {
 
-                    Intent intent = new Intent(PicnicActivity.this, UploadArtwork.class);
+                    Intent intent = new Intent(ArtworkActivity.this, CreateCritique.class);
                     intent.putExtra("PicnicID", picnicID);
+                    intent.putExtra("ArtID", artID);
+                    intent.putExtra("Feedback", feedback.getText().toString());
                     startActivity(intent);
                 }
         });
 
-        artGallery = findViewById(R.id.recyclerView);
+        critiques = findViewById(R.id.critiques);
 
     }
 
@@ -178,25 +182,42 @@ public class PicnicActivity extends AppCompatActivity  {
             uid = user.getUid();
         }
 
-        mDatabase.child("picnics").child(picnicID).addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String name = dataSnapshot.child("name").getValue().toString();
-                String description = dataSnapshot.child("description").getValue().toString();
-                String hostUID = dataSnapshot.child("hostUID").getValue().toString();
-                String code = dataSnapshot.child("id").getValue().toString();
+                String t = dataSnapshot.child("title").getValue().toString();
+                String d = dataSnapshot.child("description").getValue().toString();
+                String a = dataSnapshot.child("artist").getValue().toString();
+                String ts = dataSnapshot.child("timestamp").getValue().toString();
+                String fb = dataSnapshot.child("feedback").getValue().toString();
+                String url = dataSnapshot.child("imageURL").getValue().toString();
 
-                getSupportActionBar().setTitle(name);
+                getSupportActionBar().setTitle(t);
 
-                if(hostUID.equals(uid)){
-                    picnicCode.setVisibility(View.VISIBLE);
-                    picnicCode.setText(code);
-                } else{
-                    picnicCode.setVisibility(View.GONE);
-                }
+                title.setText(t);
+                description.setText(d);
+                timestamp.setText(ts);
+                feedback.setText(fb);
 
-                picnicName.setText(name);
-                picnicDescription.setText(description);
+                try {
+                    Bitmap image = new ArtworkActivity.getImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url).get();
+                    artwork.setImageBitmap(image);
+                } catch(Exception e){ }
+
+                mDatabase.child("users").child(a).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String displayName = dataSnapshot.child("displayName").getValue().toString();
+                        artist.setText(displayName);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+
+                layout.setVisibility(View.VISIBLE);
+                prog.setVisibility(View.GONE);
 
             }
 
@@ -205,33 +226,35 @@ public class PicnicActivity extends AppCompatActivity  {
             }
         });
 
-        artGallery.setLayoutManager(new LinearLayoutManager(this));
+        critiques.setLayoutManager(new LinearLayoutManager(this));
 
-        // TODO: Add art gallery adapter
+        // TODO: Add critiques adapter
 
-        mDatabase.child("picnics").child(picnicID).child("artworks").addListenerForSingleValueEvent(new ValueEventListener() {
+
+        mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                ArrayList<Artwork> artworks = new ArrayList<>();
+                ArrayList<Critique> critiqueList = new ArrayList<>();
                 for(int i = 0; i < dataSnapshot.getChildrenCount(); i++){
-                    String imageURL = dataSnapshot.child("" + i).child("imageURL").getValue().toString();
-                    String title = dataSnapshot.child("" + i).child("title").getValue().toString();
-                    String description = dataSnapshot.child("" + i).child("description").getValue().toString();
-                    String artist = dataSnapshot.child("" + i).child("artist").getValue().toString();
-                    String feedback = dataSnapshot.child("" + i).child("feedback").getValue().toString();
+                    String bread1 = dataSnapshot.child("" + i).child("bread1").getValue().toString();
+                    String bread2 = dataSnapshot.child("" + i).child("bread2").getValue().toString();
+                    String critiquer = dataSnapshot.child("" + i).child("critiquer").getValue().toString();
+                    String sandwich = dataSnapshot.child("" + i).child("sandwich").getValue().toString();
+                    String timestamp = dataSnapshot.child("" + i).child("timestamp").getValue().toString();
 
-                    Artwork a = new Artwork(title, artist, imageURL, description, feedback);
-                    artworks.add(a);
+                    Log.d(TAG, bread1);
+
+                    Critique c = new Critique(critiquer, bread1, sandwich, bread2);
+                    critiqueList.add(c);
                 }
 
-                if(dataSnapshot.getChildrenCount() - artworks.size() == 0) {
-                    ArtworkAdapter adapter = new ArtworkAdapter(getApplicationContext(), artworks, picnicID);
-                    artGallery.setAdapter(adapter);
-                    done = true;
-                    prog.setVisibility(View.GONE);
-                    header.setVisibility(View.VISIBLE);
-                }
+                Log.d(TAG, ""+ critiqueList.size());
+                CritiqueAdapter adapter = new CritiqueAdapter(getApplicationContext(), critiqueList);
+                critiques.setAdapter(adapter);
+                critiques.setVisibility(View.VISIBLE);
+                done = true;
+                prog.setVisibility(View.GONE);
 
             }
 
@@ -249,6 +272,24 @@ public class PicnicActivity extends AppCompatActivity  {
             return true;
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public class getImage extends AsyncTask<String , Integer, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(String... urls) {
+
+            try {
+                URL url = new URL(urls[0]);
+                Bitmap image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                return image;
+            } catch(IOException e) {
+                //System.out.println(e);
+            }
+
+            return null;
+
+        }
     }
 
 }

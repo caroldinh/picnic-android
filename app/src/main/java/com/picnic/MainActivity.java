@@ -308,8 +308,8 @@ public class MainActivity extends AppCompatActivity  {
 
                     if(!joined){
 
-                        members.add(new Member(uid));
-                        mDatabase.child("picnics").child(code).child("members").setValue(members);
+                        Member me = new Member(uid);
+                        mDatabase.child("picnics").child(code).child("members").child(uid).setValue(me);
 
                         mDatabase.child("users").child(uid).child("Joined").addListenerForSingleValueEvent(new ValueEventListener() {
 

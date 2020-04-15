@@ -1,20 +1,18 @@
 package com.picnic;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.cardview.widget.CardView;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -23,19 +21,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.picnic.data.Artwork;
-import com.picnic.data.Picnic;
+import com.picnic.data.Critique;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.List;
 
-public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHolder> {
+public class CritiqueAdapter extends RecyclerView.Adapter<CritiqueAdapter.ViewHolder> {
 
-    private List<Artwork> data;
+    private List<Critique> data;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private OnItemLongClickListener mLongClickListener;
@@ -48,18 +42,17 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
     String TAG = "Adapter Debugging Tag";
 
     // data is passed into the constructor
-    ArtworkAdapter(Context context, List<Artwork> data, String picnicID) {
+    CritiqueAdapter(Context context, List<Critique> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mContext = context;
         this.data = data;
         this.mDatabase = FirebaseDatabase.getInstance().getReference();
-        this.picnicID = picnicID;
     }
 
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)  {
-        View view = mInflater.inflate(R.layout.artwork_cards, parent, false);
+        View view = mInflater.inflate(R.layout.critiqueadapter, parent, false);
         return new ViewHolder(view);
     }
 
@@ -70,27 +63,8 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
         if(position < data.size()) {
 
             final ViewHolder holder = vh;
-            String name = data.get(position).title;
-            String description = data.get(position).description;
-            holder.name.setText(name);
-            holder.description.setText(description);
-
-            try {
-                Bitmap image = new getImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data.get(position).imageURL).get();
-                holder.artwork.setImageBitmap(image);
-            } catch(Exception e){
-
-            }
-
-            /***
-            if (position % 3 == 0) {
-                holder.card.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardcolororange));
-            } else if (position % 3 == 1) {
-                holder.card.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardcolorgreen));
-            } else {
-                holder.card.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardcolorblue));
-            }
-             ***/
+            String bread1 = data.get(position).bread1;
+            holder.preview.setText(bread1);
 
 
             final int p = position;
@@ -100,20 +74,22 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
             holder.card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(mContext, ArtworkActivity.class);
+                    Intent intent = new Intent(mContext, CritiqueActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.putExtra("PicnicID", picnicID);
-                    intent.putExtra("ArtID", ""+p);
+                    intent.putExtra("critiquer", holder.critiquer.getText());
+                    intent.putExtra("bread1", data.get(p).bread1);
+                    intent.putExtra("sandwich", data.get(p).sandwich);
+                    intent.putExtra("bread2", data.get(p).bread2);
+                    intent.putExtra("timestamp", data.get(p).timestamp);
                     mContext.startActivity(intent);
                 }
             });
 
-
-            mDatabase.child("users").child(data.get(position).artist).addListenerForSingleValueEvent(new ValueEventListener() {
+            mDatabase.child("users").child(data.get(position).critiquer).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     String hostname = dataSnapshot.child("displayName").getValue().toString();
-                    holder.artist.setText(hostname);
+                    holder.critiquer.setText(hostname);
                 }
 
                 @Override
@@ -134,18 +110,14 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ViewHold
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView name;
-        TextView artist;
-        TextView description;
-        ImageView artwork;
+        TextView preview;
+        TextView critiquer;
         CardView card;
 
         ViewHolder(View itemView) {
             super(itemView);
-            name = itemView.findViewById(R.id.name);
-            description = itemView.findViewById(R.id.description);
-            artist = itemView.findViewById(R.id.artist);
-            artwork = itemView.findViewById(R.id.artwork);
+            preview = itemView.findViewById(R.id.preview);
+            critiquer = itemView.findViewById(R.id.critiquer);
             card = itemView.findViewById(R.id.card);
         }
 

@@ -33,6 +33,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.picnic.data.Artwork;
+import com.picnic.data.Member;
 import com.picnic.data.Picnic;
 
 import java.io.FileNotFoundException;
@@ -148,6 +149,20 @@ public class UploadArtwork extends AppCompatActivity {
 
                                 Artwork art = new Artwork(name.getText().toString(), uid, url, description.getText().toString(), feedback.getText().toString());
                                 mDatabase.child("picnics").child(picnicID).child("artworks").child(""+dataSnapshot.getChildrenCount()).setValue(art);
+                                mDatabase.child("picnics").child(picnicID).child("members").child(uid).child("contributions").addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                        long contributions = (long)dataSnapshot.getValue();
+                                        contributions++;
+                                        mDatabase.child("picnics").child(picnicID).child("members").child(uid).child("contributions").setValue(contributions);
+                                        finish();
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
                                 finish();
                             }
 

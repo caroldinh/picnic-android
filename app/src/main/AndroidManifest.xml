@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.picnic">
 
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name="androidx.multidex.MultiDexApplication"
         android:allowBackup="true"
@@ -10,12 +12,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CreatePicnic"
-            android:label="Create Picnic">
-        </activity>
-        <activity android:name=".UploadArtwork"
-            android:label="Upload Artwork">
-        </activity>
+        <activity
+            android:name=".CreatePicnic"
+            android:label="Create Picnic" />
+        <activity
+            android:name=".UploadArtwork"
+            android:label="Upload Artwork" />
+        <activity
+            android:name=".CreateCritique"
+            android:label="Submit Critique" />
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
@@ -23,6 +28,14 @@
         <activity
             android:name=".PicnicActivity"
             android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".CritiqueActivity"
+            android:label="Critique"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ArtworkActivity"
+            android:label="Artwork"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".Register"
