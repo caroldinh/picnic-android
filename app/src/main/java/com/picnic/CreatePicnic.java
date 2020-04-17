@@ -58,6 +58,12 @@ public class CreatePicnic extends AppCompatActivity {
             username = user.getDisplayName();
             uid = user.getUid();
 
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(CreatePicnic.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
 
     }

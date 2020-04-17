@@ -182,10 +182,10 @@ public class Register extends AppCompatActivity {
     public void showLogin(View v){
 
         loginButton.setVisibility(View.VISIBLE);
-        registerButton.setVisibility(View.INVISIBLE);
+        registerButton.setVisibility(View.GONE);
         displayName.setVisibility(View.GONE);
         registerInstead.setVisibility(View.VISIBLE);
-        loginInstead.setVisibility(View.INVISIBLE);
+        loginInstead.setVisibility(View.GONE);
         verifyPassword.setVisibility(View.GONE);
 
         displayName.setText("");
@@ -198,10 +198,10 @@ public class Register extends AppCompatActivity {
 
     public void showRegister(View v){
 
-        loginButton.setVisibility(View.INVISIBLE);
+        loginButton.setVisibility(View.GONE);
         registerButton.setVisibility(View.VISIBLE);
         displayName.setVisibility(View.VISIBLE);
-        registerInstead.setVisibility(View.INVISIBLE);
+        registerInstead.setVisibility(View.GONE);
         loginInstead.setVisibility(View.VISIBLE);
         verifyPassword.setVisibility(View.VISIBLE);
 

@@ -68,6 +68,12 @@ public class CreateCritique extends AppCompatActivity {
             username = user.getDisplayName();
             uid = user.getUid();
 
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(CreateCritique.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
 
     }
@@ -82,16 +88,37 @@ public class CreateCritique extends AppCompatActivity {
 
         if(!bread1.getText().toString().equals("") && !bread2.getText().toString().equals("") && !sandwich.getText().toString().equals("")) {
 
-            mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").addListenerForSingleValueEvent(new ValueEventListener() {
+            mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    final String workTitle = dataSnapshot.child("title").getValue().toString();
+                    final String artistname = dataSnapshot.child("artist").getValue().toString();
 
                     Date date = new Date();
                     long timestamp = date.getTime();
                     Critique critique = new Critique(uid, bread1.getText().toString(),
                             sandwich.getText().toString(), bread2.getText().toString());
 
-                    mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").child(dataSnapshot.getChildrenCount()+"").setValue(critique);
+                    mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").child(dataSnapshot.child("critiques").getChildrenCount()+"").setValue(critique);
+
+
+                    mDatabase.child("users").child(artistname).child("notifications").child("unread").addListenerForSingleValueEvent(new ValueEventListener() {
+
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                            // Send notif to host
+                            String notif = username + " has added a critique to your drawing " + workTitle;
+                            long notifs = dataSnapshot.getChildrenCount();
+                            mDatabase.child("users").child(artistname).child("notifications").child("unread").child(notifs+"").setValue(notif);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+
+                    });
 
                     mDatabase.child("picnics").child(picnicID).child("members").child(uid).child("critiques").addListenerForSingleValueEvent(new ValueEventListener() {
 

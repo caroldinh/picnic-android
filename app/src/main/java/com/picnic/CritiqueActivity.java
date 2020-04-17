@@ -9,11 +9,13 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,12 +59,14 @@ public class CritiqueActivity extends AppCompatActivity  {
     RecyclerView critiques;
     String TAG = "PicnicActivity Debugging Tag";
 
-    String b1, sw, b2, ts, cr;
+    String b1, sw, b2, ts, cr, crUID, ownWork;
 
     TextView critiquer, bread1, sandwich, bread2, timestamp;
     ProgressBar prog;
 
     LinearLayout layout;
+
+    Button giveThanks;
 
     boolean done = false;
 
@@ -75,6 +79,8 @@ public class CritiqueActivity extends AppCompatActivity  {
         sw = getIntent().getStringExtra("sandwich");
         ts = getIntent().getStringExtra("timestamp");
         cr = getIntent().getStringExtra("critiquer");
+        crUID = getIntent().getStringExtra("crUID");
+        ownWork = getIntent().getStringExtra("ownWork");
 
         setContentView(R.layout.activity_critique);
         toolbar = findViewById(R.id.toolbar);
@@ -92,6 +98,15 @@ public class CritiqueActivity extends AppCompatActivity  {
         timestamp.setText(ts);
         bread2 = findViewById(R.id.bread2);
         bread2.setText(b2);
+
+        giveThanks = findViewById(R.id.giveThanks);
+        if(ownWork.equals("true")) {
+            giveThanks.setActivated(true);
+            giveThanks.setVisibility(View.VISIBLE);
+            giveThanks.setText("Thank " + cr + " for their critique");
+        } else{
+            giveThanks.setVisibility(View.GONE);
+        }
 
         drawerLayout = findViewById(R.id.drawer);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -132,7 +147,9 @@ public class CritiqueActivity extends AppCompatActivity  {
                     case 3:
                         //Toast.makeText(MainActivity.this, "Logout",Toast.LENGTH_SHORT).show();
                         mAuth.signOut();
-                        startActivity(new Intent(CritiqueActivity.this, Register.class));
+                        Intent i = new Intent(CritiqueActivity.this,Register.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(i);
                         finish();
                         break;
                     default:
@@ -163,6 +180,12 @@ public class CritiqueActivity extends AppCompatActivity  {
             //Uri photoUrl = user.getPhotoUrl();
 
             uid = user.getUid();
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(CritiqueActivity.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
     }
 
@@ -173,6 +196,28 @@ public class CritiqueActivity extends AppCompatActivity  {
             return true;
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void thank(View v){
+
+        mDatabase.child("users").child(crUID).child("notifications").child("unread").addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                // Send notif to host
+                String notif = name + " thanks you for your critique on their work";
+                long notifs = dataSnapshot.getChildrenCount();
+                mDatabase.child("users").child(crUID).child("notifications").child("unread").child(notifs+"").setValue(notif);
+                giveThanks.setText("Your thanks has been given");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+
+        });
+
     }
 
 }

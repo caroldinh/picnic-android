@@ -38,15 +38,21 @@ public class CritiqueAdapter extends RecyclerView.Adapter<CritiqueAdapter.ViewHo
     private String source;
     private DatabaseReference mDatabase;
     private String picnicID;
+    private String ownWork;
 
     String TAG = "Adapter Debugging Tag";
 
     // data is passed into the constructor
-    CritiqueAdapter(Context context, List<Critique> data) {
+    CritiqueAdapter(Context context, List<Critique> data, boolean ownWork) {
         this.mInflater = LayoutInflater.from(context);
         this.mContext = context;
         this.data = data;
         this.mDatabase = FirebaseDatabase.getInstance().getReference();
+        if(ownWork) {
+            this.ownWork = "true";
+        } else {
+            this.ownWork = "false";
+        }
     }
 
     // inflates the row layout from xml when needed
@@ -81,6 +87,8 @@ public class CritiqueAdapter extends RecyclerView.Adapter<CritiqueAdapter.ViewHo
                     intent.putExtra("sandwich", data.get(p).sandwich);
                     intent.putExtra("bread2", data.get(p).bread2);
                     intent.putExtra("timestamp", data.get(p).timestamp);
+                    intent.putExtra("crUID", data.get(p).critiquer);
+                    intent.putExtra("ownWork", ownWork);
                     mContext.startActivity(intent);
                 }
             });

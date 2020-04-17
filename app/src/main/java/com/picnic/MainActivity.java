@@ -1,5 +1,6 @@
 package com.picnic;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -86,7 +87,6 @@ public class MainActivity extends AppCompatActivity  {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-
         /***
         navigationView = findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(this);
@@ -123,7 +123,9 @@ public class MainActivity extends AppCompatActivity  {
                     case 3:
                         //Toast.makeText(MainActivity.this, "Logout",Toast.LENGTH_SHORT).show();
                         mAuth.signOut();
-                        startActivity(new Intent(MainActivity.this, Register.class));
+                        Intent i = new Intent(MainActivity.this,Register.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(i);
                         finish();
                         break;
                     default:
@@ -172,7 +174,7 @@ public class MainActivity extends AppCompatActivity  {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
-                                String code = String.valueOf(taskEditText.getText());
+                                String code = taskEditText.getText().toString();
                                 joinPicnic(code);
 
                             }
@@ -207,8 +209,12 @@ public class MainActivity extends AppCompatActivity  {
             // authenticate with your backend server, if you have one. Use
             // FirebaseUser.getIdToken() instead.
             uid = user.getUid();
-
-            Toast.makeText(getApplicationContext(), "Hello " + name, Toast.LENGTH_SHORT).show();
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(MainActivity.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
 
         picnicGallery.setLayoutManager(new LinearLayoutManager(this));
@@ -289,22 +295,39 @@ public class MainActivity extends AppCompatActivity  {
         mDatabase.child("picnics").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
+                Log.d(TAG, "1");
                 if (dataSnapshot.hasChild(code)) {
 
+                    final String host = dataSnapshot.child(code).child("hostUID").getValue().toString();
+
                     boolean joined = false;
+                    Iterable<DataSnapshot> memberKeys = dataSnapshot.child("members").getChildren();
+
+                    for(DataSnapshot child: memberKeys) {
+                        String mUID = child.getKey();
+                        if (mUID.equals(uid)) {
+                            joined = true;
+                        }
+                    }
+
+                    /***
                     final ArrayList<Member> members = new ArrayList<>();
                     for (int i = 0; i < dataSnapshot.child(code).child("members").getChildrenCount(); i++) {
+                        Log.d(TAG, dataSnapshot.child(code).child("members").getKey());
                         String mUID = dataSnapshot.child(code).child("members").child(""+i).child("UID").getValue().toString();
                         Log.d(TAG, mUID);
 
                         members.add(new Member(mUID));
 
-                        // [{UID=7bfHVaXLgHO16UfkZmzUWemrNax1, contributions=0, critiques=0}]
+                        Log.d(TAG, "2");
 
                         if(mUID.equals(uid)){
                             joined = true;
                         }
-                    }
+                     ***/
+
+                    Log.d(TAG, "3");
 
                     if(!joined){
 
@@ -325,10 +348,22 @@ public class MainActivity extends AppCompatActivity  {
                                 joined.add(code);
                                 mDatabase.child("users").child(uid).child("Joined").setValue(joined);
 
-                                // Refresh the page
-                                startActivity(new Intent(MainActivity.this, MainActivity.class));
-                                finish();
+                                // Send notification for host
+                                mDatabase.child("users").child(host).child("notifications").child("unread").addListenerForSingleValueEvent(new ValueEventListener() {
 
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        String notif = name + " has joined your picnic!";
+                                        long notifs = dataSnapshot.getChildrenCount();
+                                        mDatabase.child("users").child(host).child("notifications").child("unread").child(notifs+"").setValue(notif);
+
+                                        // Refresh the page
+                                        startActivity(new Intent(MainActivity.this, MainActivity.class));
+                                        finish();
+                                    }
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) { }
+                                });
 
 
                             }
@@ -354,6 +389,12 @@ public class MainActivity extends AppCompatActivity  {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+    }
+
+    @Override
+    public void onStop(){
+        super.onStop();
+        startService(new Intent(this, NotificationService.class));
     }
 
 }

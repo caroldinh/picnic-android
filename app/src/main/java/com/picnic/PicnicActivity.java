@@ -132,7 +132,9 @@ public class PicnicActivity extends AppCompatActivity  {
                     case 3:
                         //Toast.makeText(MainActivity.this, "Logout",Toast.LENGTH_SHORT).show();
                         mAuth.signOut();
-                        startActivity(new Intent(PicnicActivity.this, Register.class));
+                        Intent i = new Intent(PicnicActivity.this,Register.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(i);
                         finish();
                         break;
                     default:
@@ -152,9 +154,25 @@ public class PicnicActivity extends AppCompatActivity  {
                 @Override
                 public void onClick(View view) {
 
-                    Intent intent = new Intent(PicnicActivity.this, UploadArtwork.class);
-                    intent.putExtra("PicnicID", picnicID);
-                    startActivity(intent);
+                    mDatabase.child("picnics").child(picnicID).child("members").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                            long contributions = (long)dataSnapshot.child("contributions").getValue();
+                            long critiques = (long)dataSnapshot.child("critiques").getValue();
+                            if(contributions > critiques) {
+                                Toast.makeText(getApplicationContext(), "You must add another critique before you can upload artwork!", Toast.LENGTH_SHORT).show();
+                            } else{
+                                Intent intent = new Intent(PicnicActivity.this, UploadArtwork.class);
+                                intent.putExtra("PicnicID", picnicID);
+                                startActivity(intent);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
                 }
         });
 
@@ -176,6 +194,12 @@ public class PicnicActivity extends AppCompatActivity  {
             //Uri photoUrl = user.getPhotoUrl();
 
             uid = user.getUid();
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(PicnicActivity.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
 
         mDatabase.child("picnics").child(picnicID).addListenerForSingleValueEvent(new ValueEventListener() {

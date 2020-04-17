@@ -131,6 +131,17 @@
                     android:layout_marginTop="0dp"
                     />
 
+                <Button
+                    android:id="@+id/giveThanks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="Thank"
+                    android:background="@color/colorPrimary"
+                    android:onClick="thank"
+                    android:layout_marginTop="30dp"
+                    android:foreground="?android:attr/selectableItemBackground"/>
+
             </LinearLayout>
 
 

@@ -2,6 +2,7 @@ package com.picnic;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -21,11 +22,11 @@ import androidx.core.app.NotificationCompat;
  * This class makes heavy use of the {@link NotificationCompat.Builder} helper
  * class to create notifications in a backward-compatible way.
  */
-public class CritiqueNotif {
+public class Notif {
     /**
      * The unique identifier for this type of notification.
      */
-    private static final String NOTIFICATION_TAG = "CritiqueNotif";
+    private static final String NOTIFICATION_TAG = "Notification";
 
     /**
      * Shows the notification, or updates a previously shown notification of
@@ -38,30 +39,32 @@ public class CritiqueNotif {
      * presentation of critique notif notifications. Make
      * sure to follow the
      * <a href="https://developer.android.com/design/patterns/notifications.html">
-     * Notification design guidelines</a> when doing so.
+     * Notif design guidelines</a> when doing so.
      *
      * @see #cancel(Context)
      */
-    public static void notify(final Context context,
-                              final String exampleString, final int number) {
+    public static void notify(final Context context, final String exampleString, final int number) {
         final Resources res = context.getResources();
 
         // This image is used as the notification's large icon (thumbnail).
         // TODO: Remove this if your notification has no relevant thumbnail.
-        final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.example_picture);
+        final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.picnics);
 
 
         final String ticker = exampleString;
-        final String title = res.getString(
-                R.string.critique_notif_notification_title_template, exampleString);
-        final String text = res.getString(
-                R.string.critique_notif_notification_placeholder_text_template, exampleString);
+        final String title = "Picnic";
+        final String text = exampleString;
+
+        Intent notificationIntent = new Intent(context, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(context,
+                0, notificationIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
 
                 // Set appropriate defaults for the notification light, sound,
                 // and vibration.
-                .setDefaults(Notification.DEFAULT_ALL)
+                .setDefaults(android.app.Notification.DEFAULT_ALL)
 
                 // Set required fields, including the small icon, the
                 // notification title, and text.
@@ -69,7 +72,8 @@ public class CritiqueNotif {
                 .setContentTitle(title)
                 .setContentText(text)
 
-                // All fields below this line are optional.
+
+                /*** All fields below this line are optional.***/
 
                 // Use a default priority (recognized on devices running Android
                 // 4.1 or later)
@@ -97,18 +101,15 @@ public class CritiqueNotif {
 
                 // Set the pending intent to be initiated when the user touches
                 // the notification.
-                .setContentIntent(
-                        PendingIntent.getActivity(
-                                context,
-                                0,
-                                new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com")),
-                                PendingIntent.FLAG_UPDATE_CURRENT))
+                .setContentIntent(contentIntent)
+                .setAutoCancel(true);
 
                 // Example additional actions for this notification. These will
                 // only show on devices running Android 4.1 or later, so you
                 // should ensure that the activity in this notification's
                 // content intent provides access to the same actions in
                 // another way.
+                /***
                 .addAction(
                         R.drawable.ic_action_stat_share,
                         res.getString(R.string.action_share),
@@ -123,19 +124,32 @@ public class CritiqueNotif {
                         R.drawable.ic_action_stat_reply,
                         res.getString(R.string.action_reply),
                         null)
-
+                ***/
                 // Automatically dismiss the notification when it is touched.
-                .setAutoCancel(true);
+                //.setAutoCancel(true);
 
-        notify(context, builder.build());
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            String channelId = "Your_channel_id";
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Channel human readable title",
+                    NotificationManager.IMPORTANCE_HIGH);
+            manager.createNotificationChannel(channel);
+            builder.setChannelId(channelId);
+        }
+
+        notify(number, context, builder.build());
     }
 
     @TargetApi(Build.VERSION_CODES.ECLAIR)
-    private static void notify(final Context context, final Notification notification) {
+    private static void notify(final int number, final Context context, final android.app.Notification notification) {
         final NotificationManager nm = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-            nm.notify(NOTIFICATION_TAG, 0, notification);
+            nm.notify(NOTIFICATION_TAG, number, notification);
         } else {
             nm.notify(NOTIFICATION_TAG.hashCode(), notification);
         }

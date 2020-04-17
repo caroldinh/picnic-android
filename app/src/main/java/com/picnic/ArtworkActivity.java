@@ -67,6 +67,8 @@ public class ArtworkActivity extends AppCompatActivity  {
 
     LinearLayout layout;
 
+    boolean ownWork = false;
+
     boolean done = false;
 
     @Override
@@ -134,7 +136,9 @@ public class ArtworkActivity extends AppCompatActivity  {
                     case 3:
                         //Toast.makeText(MainActivity.this, "Logout",Toast.LENGTH_SHORT).show();
                         mAuth.signOut();
-                        startActivity(new Intent(ArtworkActivity.this, Register.class));
+                        Intent i = new Intent(ArtworkActivity.this,Register.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(i);
                         finish();
                         break;
                     default:
@@ -180,6 +184,12 @@ public class ArtworkActivity extends AppCompatActivity  {
             //Uri photoUrl = user.getPhotoUrl();
 
             uid = user.getUid();
+        } else{
+            mAuth.signOut();
+            Intent i = new Intent(ArtworkActivity.this,Register.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         }
 
         mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -198,6 +208,11 @@ public class ArtworkActivity extends AppCompatActivity  {
                 description.setText(d);
                 timestamp.setText(ts);
                 feedback.setText(fb);
+
+                if(a.equals(uid)){
+                    ownWork = true;
+                    Log.d(TAG, "onwnWork = true");
+                }
 
                 try {
                     Bitmap image = new ArtworkActivity.getImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url).get();
@@ -219,42 +234,39 @@ public class ArtworkActivity extends AppCompatActivity  {
                 layout.setVisibility(View.VISIBLE);
                 prog.setVisibility(View.GONE);
 
-            }
+                critiques.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
+                mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
 
-        critiques.setLayoutManager(new LinearLayoutManager(this));
+                        ArrayList<Critique> critiqueList = new ArrayList<>();
+                        for(int i = 0; i < dataSnapshot.getChildrenCount(); i++){
+                            String bread1 = dataSnapshot.child("" + i).child("bread1").getValue().toString();
+                            String bread2 = dataSnapshot.child("" + i).child("bread2").getValue().toString();
+                            String critiquer = dataSnapshot.child("" + i).child("critiquer").getValue().toString();
+                            String sandwich = dataSnapshot.child("" + i).child("sandwich").getValue().toString();
+                            String timestamp = dataSnapshot.child("" + i).child("timestamp").getValue().toString();
 
-        // TODO: Add critiques adapter
+                            Log.d(TAG, bread1);
 
+                            Critique c = new Critique(critiquer, bread1, sandwich, bread2);
+                            critiqueList.add(c);
+                        }
 
-        mDatabase.child("picnics").child(picnicID).child("artworks").child(artID).child("critiques").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d(TAG, ""+ critiqueList.size());
+                        CritiqueAdapter adapter = new CritiqueAdapter(getApplicationContext(), critiqueList, ownWork);
+                        critiques.setAdapter(adapter);
+                        critiques.setVisibility(View.VISIBLE);
+                        done = true;
+                        prog.setVisibility(View.GONE);
 
-                ArrayList<Critique> critiqueList = new ArrayList<>();
-                for(int i = 0; i < dataSnapshot.getChildrenCount(); i++){
-                    String bread1 = dataSnapshot.child("" + i).child("bread1").getValue().toString();
-                    String bread2 = dataSnapshot.child("" + i).child("bread2").getValue().toString();
-                    String critiquer = dataSnapshot.child("" + i).child("critiquer").getValue().toString();
-                    String sandwich = dataSnapshot.child("" + i).child("sandwich").getValue().toString();
-                    String timestamp = dataSnapshot.child("" + i).child("timestamp").getValue().toString();
+                    }
 
-                    Log.d(TAG, bread1);
-
-                    Critique c = new Critique(critiquer, bread1, sandwich, bread2);
-                    critiqueList.add(c);
-                }
-
-                Log.d(TAG, ""+ critiqueList.size());
-                CritiqueAdapter adapter = new CritiqueAdapter(getApplicationContext(), critiqueList);
-                critiques.setAdapter(adapter);
-                critiques.setVisibility(View.VISIBLE);
-                done = true;
-                prog.setVisibility(View.GONE);
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
 
             }
 
